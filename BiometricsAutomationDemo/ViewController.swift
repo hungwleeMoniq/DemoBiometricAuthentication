@@ -12,9 +12,14 @@ class ViewController: UIViewController {
         let context = LAContext()
         context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics,
                                localizedReason: "Authenticate now!",
-                               reply: { success, error in
-            let title = success ? "Authenticated successfully!" : "Authentication failed. \(error)"
+                               reply:
+                                //call back
+                                { success, error in
+            let title = success ? "Authenticated successfully!" : "Authentication failed. \nFall back to Password/PIN authentication"
             let controller = UIAlertController(title: title, message: nil, preferredStyle: .alert)
+            controller.addAction(UIAlertAction(title: "OK", style: .default, handler: { _ in
+                controller.dismiss(animated: true)
+            }))
             DispatchQueue.main.async() {
                 self.present(controller, animated: true)
             }
@@ -32,11 +37,20 @@ class ViewController: UIViewController {
         let errorPointer: NSErrorPointer = NSErrorPointer(&error)
         let isBiometryAvailable = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics,
                                                             error: errorPointer)
+        
+        setupBioStateLabel()
         if isBiometryAvailable {
             handleBiometryAvailable()
+            authenticateButton.isHidden = false
         } else {
             handleBiometryUnavailable()
+            authenticateButton.isHidden = true
         }
+    }
+    
+    private func setupBioStateLabel() {
+        biometricsStateLabel.font = .systemFont(ofSize: 17, weight: .medium)
+        biometricsStateLabel.textColor = .black
     }
     
     private func handleBiometryAvailable() {
